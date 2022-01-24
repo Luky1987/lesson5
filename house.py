@@ -1,132 +1,115 @@
-#imports
+import pygame
+from enum import Enum
 
-import graphics as gr
-import tkinter as tk
-import time
+FPS = 60
+CELL_SIZE = 50
 
+
+class Cell(Enum):
+    VOID = 0
+    CROSS = 1
+    ZERO = 2
+
+
+class Player:
+    """
+    Класс игрока содержащий тип значков и имя игрока
+    """
+    def __init__(self, name, cell_type):
+        self.name = name
+        self.cell_type = cell_type
+
+
+class GameField:
+    def __init__(self):
+        self.height = 3
+        self.width = 3
+        self.cells = [[Cell.VOID]*self.width for i in range(self.height)]
+
+
+class GameFieldView:
+    """
+    Виджет игрового поля, который отображает его на экране,
+    а так же выясняет место клика
+    """
+    def __init__(self, field):
+        # Загрузить картинки значков клеток
+        # Отобразить первичное состояние поля
+        self._field = field
+        self._height = field.height * CELL_SIZE
+        self._widht = field.width * CELL_SIZE
+
+
+    def draw(self):
+        pass
+
+    def check_coords_correct(self, x, y):
+        return True #TODO: self._height учесть
+
+    def get_coords(self, x, y):
+        return 0, 0  # TODO: реально вычислить
+
+
+
+class GameRoundManager:
+    """
+    Менеджер игры, запускающий все процессы
+    """
+    def __init__(self, player1: Player, player2: Player):
+        self.players = [player1, player2]
+        self._current_player = 0
+        self.field = GameField()
+
+    def handle_click(self, i, j):
+        player = self.players[self._current_player]
+        # игрок делает клик на поле
+        print('handle_click', i ,j)
+
+
+class GameWindow:
+    """
+    Содержит виджет поля,
+    а так же менеджера игрового раунда
+    """
+    def __init__(self):
+        # инициализация pygame
+        pygame.init()
+
+        # Window
+        self._width = 800
+        self._height = 600
+        self._title = 'CROSS/ZERO'
+        self._screen = pygame.display.set_mode((self._width, self._height))
+        pygame.display.set_caption(self._title)
+
+        player1 = Player('Путя', Cell.CROSS)
+        player2 = Player('Вася', Cell.ZERO)
+        self._game_manager = GameRoundManager(player1, player2)
+        self._field_widget = GameFieldView(self._game_manager.field)  #!!!
+
+    def main_loop(self):
+        finished = False
+        clock = pygame.time.Clock()
+        while not finished:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    finished = True
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    mouse_pos = pygame.mouse.get_pos()
+                    x, y = mouse_pos
+                    if self._field_widget.check_coords_correct(x, y):
+                        i, j = self._field_widget.get_coords(x, y)
+                        self._game_manager.handle_click(i, j)
+            pygame.display.flip()
+            clock.tick(FPS)
 
 def main():
-    x, y = 600, 450
-    width, height = 600, 450
-
-    global window
-    window = gr.GraphWin('My House', 1000, 600)
-
-    open_window_for_house(x, y, width, height)
+    window = GameWindow()
+    window.main_loop()
+    print('Game Over!')
 
 
-
-def open_window_for_house(x, y, width, height):
-    """
-    Функция заполняющая пространство вокруг дома,
-    для визуальных эффектов
-    """
-    #Окно для размещения домика
-
-
-
-    #Покраска травы и неба
-    color_street = gr.Rectangle(gr.Point(1000,600), gr.Point(0, 350))
-    color_street.setFill('Green')
-    color_street.draw(window)
-    color_oxygen = gr.Rectangle(gr.Point(0,0), gr.Point(1000, 350))
-    color_oxygen.setFill('Blue')
-    color_oxygen.draw(window)
-
-    #Добавление светила
-    color_sun = gr.Circle(gr.Point(900,80),50)
-    color_sun.setFill('Yellow')
-    color_sun.draw(window)
-
-    draw_house(x, y, width, height)
-    time.sleep(3)
-
-
-def draw_house_foundation(x, y, width, height):
-    """
-    Функция рисующая основание домика, основание выполнено серым цветом
-    :param x:
-    :param y:
-    :param width:
-    :param height:
-    :return:
-    """
-    load_house_fondation = gr.Rectangle(gr.Point(x - width/2, y - height/2),
-                           gr.Point(x + width/2, y + height/2))
-    load_house_fondation.setFill('Grey')
-    load_house_fondation.draw(window)
-
-
-
-def draw_house_walls(x, y, width, height):
-    """
-    Функция рисующая стены домика
-    :param x:
-    :param y:
-    :param width:
-    :param height:
-    :return:
-    """
-
-    load_house_wall = gr.Rectangle(gr.Point(x - width/2, y - height/2),
-                                   gr.Point(x + width/2, y + height/2))
-    load_house_wall.setFill('Brown')
-    load_house_wall.draw(window)
-
-
-
-def draw_house_roof(x, y, width, height):
-    """
-    Функция рисующая крышу домика
-    :param x:
-    :param y:
-    :param width:
-    :param height:
-    :return:
-    """
-    load_house_roof = gr.Polygon(gr.Point(x, height),
-            gr.Point(x - width / 2, y),gr.Point(x + width / 2, y))
-    load_house_roof.setFill('Orange')
-    load_house_roof.draw(window)
-
-
-def ufo():
-    """
-    Функция добавляет НЛО на небо
-    :return: None
-    """
-    ship_alien = gr.Oval(gr.Point(100,100),gr.Point(250,125))
-    ship_alien.setFill('Red')
-    ship_alien.setOutline('Green')
-    ship_alien.setWidth(5)
-    ship_alien.draw(window)
-    #ship_alien.move(900,100)
-
-
-def draw_house(x,y,width,height):
-    """
-    Функция рисующая домик шириной width, высотой height, с опорной точкой в центре
-    нижней точки фундамента x, y.
-    :param x: координата x середины домика
-    :param y: координата y низа домика
-    :param width: полная ширина домика (фундамента или вылеты крыши включены)
-    :param height: полная высота домика
-    :return: None
-    Ничего не возвращаем
-    """
-    print('Типа рисую домик...', x, y, width, height)
-    foundation_height = 0.05 * height
-    walls_width = 0.9 * width
-    walls_height = 0.5 * height
-    roof_height = height - foundation_height - walls_height
-
-    draw_house_foundation(x, y, width, foundation_height)
-    draw_house_walls(x, y*0.725, walls_width, walls_height)
-    draw_house_roof(x, y*1.025 - foundation_height - walls_height, width, roof_height*0.8)
-    ufo()
-
-
-main()
-
+if __name__ == '__main__':
+    main()
 
 
